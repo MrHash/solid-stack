@@ -1,0 +1,66 @@
+version: "2.4"
+
+volumes:
+  tor_data:
+  bitcoin_data:
+
+services:
+  tor:
+    container_name: ${COMPOSE_PROJECT_NAME}_tor
+    image: ${COMPOSE_PROJECT_NAME}/tor
+    build: ./tor
+    restart: on-failure
+    volumes:
+      - tor_data:/var/lib/tor
+    ports:
+      - "127.0.0.1:${TOR_SOCKS_PORT}:${TOR_SOCKS_PORT}"
+    networks:
+      solidnet:
+        ipv4_address: 172.72.1.10
+
+  bitcoin:
+    container_name: ${COMPOSE_PROJECT_NAME}_bitcoin
+    image: bitcoinstack/bitcoin:0.18.1-alpine
+    command: [
+      "-regtest=1",
+      "-upnp=0",
+      "-server=1",
+      "-txindex=1",
+      "-dbcache=50",
+      "-deprecatedrpc=generate",
+      "-dnsseed=0",
+      "-dns=0",
+      "-onlynet=onion",
+      "-port=${BITCOIN_PORT}",
+      "-listen=1",
+      "-bind=172.72.1.20",
+      "-proxy=172.72.1.10:${TOR_SOCKS_PORT}",
+      "-addnode=y24bocmbb7uauay5.onion",
+      "-regtest.rpcport=${BITCOIN_RPC_PORT}",
+      "-regtest.port=${BITCOIN_PORT}",
+      "-rpcport=${BITCOIN_RPC_PORT}",
+      "-rpcuser=${BITCOIN_RPC_USER}",
+      "-rpcpassword=${BITCOIN_RPC_PASSWORD}",
+      "-rpcallowip=0.0.0.0/0",
+      "-rpcbind=${BITCOIN_HOST}",
+      "-zmqpubrawtx=tcp://0.0.0.0:${BITCOIN_ZMQ_TX_PORT}",
+      "-zmqpubrawblock=tcp://0.0.0.0:${BITCOIN_ZMQ_BLOCK_PORT}",
+      "-zmqpubhashblock=tcp://0.0.0.0:${BITCOIN_ZMQ_BLOCK_PORT}"
+    ]
+    depends_on:
+      - tor
+    ports:
+      - "127.0.0.1:${BITCOIN_RPC_PORT}:${BITCOIN_RPC_PORT}"
+    volumes:
+      - bitcoin_data:/home/bitcoin/.bitcoin
+    networks:
+      solidnet:
+        ipv4_address: 172.72.1.20
+
+networks:
+  solidnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.72.1.0/24
