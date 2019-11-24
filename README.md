@@ -11,7 +11,7 @@ root$ usermod -aG docker <your user> # eg. pi, odroid etc.
 
 ## Clone Repo
 ```
-$ git clone git@github.com:MrHash/solid-stack.git
+$ git clone https://github.com/MrHash/solid-stack.git
 $ cd solid-stack
 ```
 
