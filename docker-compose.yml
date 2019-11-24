@@ -7,7 +7,7 @@ volumes:
 services:
   tor:
     container_name: ${COMPOSE_PROJECT_NAME}_tor
-    image: ${COMPOSE_PROJECT_NAME}/tor
+    image: ${COMPOSE_PROJECT_NAME}/tor:0.1
     build: ./tor
     restart: on-failure
     volumes:
@@ -35,7 +35,7 @@ services:
       "-listen=1",
       "-bind=172.72.1.20",
       "-proxy=172.72.1.10:${TOR_SOCKS_PORT}",
-      "-addnode=y24bocmbb7uauay5.onion",
+      "-addnode=${SEED_NODE}:${BITCOIN_PORT}",
       "-regtest.rpcport=${BITCOIN_RPC_PORT}",
       "-regtest.port=${BITCOIN_PORT}",
       "-rpcport=${BITCOIN_RPC_PORT}",
