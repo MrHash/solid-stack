@@ -17,6 +17,50 @@ function getImpl() {
     echo "${BASH_REMATCH[1]}"
 }
 
+function guardImpl() {
+    local IMPL=$(getImpl $1)
+    if [[ $2 != *$IMPL* ]]; then
+        echo "'$1' node impl '$IMPL' is not within set '$2'"
+        exit 2
+    fi
+}
+
+function pegin_command() {
+    IFS=' ' read -r -a args <<< $ARGS
+    local TARGET=${args[1]}
+    guardImpl $NODE "bitcoin"
+    guardImpl $TARGET "elements"
+    #test pegin amount
+    local AMOUNT=${args[2]}
+    bin/stack $TARGET generate 1
+    local ADDRS=$(bin/solid $TARGET getpeginaddress)
+    local MAINCHAIN=$(echo $ADDRS | jq '.mainchain_address' | tr -d '"')
+    local SIDECHAIN=$(echo $ADDRS | jq '.claim_script' | tr -d '"')
+    local TXID=$(bin/solid $NODE sendtoaddress $MAINCHAIN $AMOUNT)
+    bin/solid $NODE generate 101
+    local PROOF=$(bin/solid $NODE gettxoutproof '''["'''$TXID'''"]''')
+    local RAW=$(bin/solid $NODE getrawtransaction $TXID)
+    bin/solid $TARGET claimpegin $RAW $PROOF
+    bin/solid $TARGET generate 1
+}
+
+function getkeypair_command() {
+    guardImpl $NODE "elements"
+    local ADDR=$(bin/solid $NODE getnewaddress)
+    local PUBKEY=$(bin/solid $NODE getaddressinfo $ADDR | jq '.pubkey' | tr -d '"')
+    local PRIVKEY=$(bin/solid $NODE dumpprivkey $ADDR)
+    echo $PUBKEY' '$PRIVKEY
+}
+
+function multisig_command() {
+    IFS=' ' read -r -a args <<< $ARGS
+    local TARGET=${args[1]}
+    guardImpl $NODE "elements"
+    #todo loop over args
+    local MULTISIG=$(bin/solid elements createmultisig ${args[1]} '["'${args[2]}'","'${args[3]}'"]')
+    echo $MULTISIG | jq '.redeemScript' | tr -d '"'
+}
+
 function passthru_command() {
     local NODE_IMPL=$(getImpl $NODE)
     case "$NODE_IMPL" in
@@ -43,5 +87,11 @@ function passthru_command() {
 }
 
 case "$COMMAND" in
+    multisig) multisig_command ;;
+
+    getkeypair) getkeypair_command ;;
+
+    pegin) pegin_command ;;
+
     *) passthru_command ;;
 esac

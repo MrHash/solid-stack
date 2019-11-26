@@ -8,11 +8,17 @@ volumes:
 services:
   tor:
     container_name: ${COMPOSE_PROJECT_NAME}_tor
-    image: ${COMPOSE_PROJECT_NAME}/tor:0.1
-    build: ./tor
+    image: bitcoinstack/tor:0.4.1.6
     restart: on-failure
     volumes:
-      - tor_data:/var/lib/tor
+      - tor_data:/var/lib/tor/hidden_service
+    depends_on:
+      - bitcoin
+      - elements
+    environment:
+      TOR_SOCKS_PORT: "172.72.1.10:${TOR_SOCKS_PORT}"
+      BITCOIN_TOR_SERVICE_HOSTS: "${BITCOIN_PORT}:bitcoin:${BITCOIN_PORT},${ELEMENTS_PORT}:elements:${ELEMENTS_PORT}"
+      BITCOIN_TOR_SERVICE_VERSION: "2"
     ports:
       - "127.0.0.1:${TOR_SOCKS_PORT}:${TOR_SOCKS_PORT}"
     networks:
@@ -36,7 +42,6 @@ services:
       "-listen=1",
       "-bind=172.72.1.20",
       "-proxy=172.72.1.10:${TOR_SOCKS_PORT}",
-      "-addnode=${SEED_NODE}:${BITCOIN_PORT}",
       "-regtest.rpcport=${BITCOIN_RPC_PORT}",
       "-regtest.port=${BITCOIN_PORT}",
       "-rpcport=${BITCOIN_RPC_PORT}",
@@ -48,8 +53,6 @@ services:
       "-zmqpubrawblock=tcp://0.0.0.0:${BITCOIN_ZMQ_BLOCK_PORT}",
       "-zmqpubhashblock=tcp://0.0.0.0:${BITCOIN_ZMQ_BLOCK_PORT}"
     ]
-    depends_on:
-      - tor
     ports:
       - "127.0.0.1:${BITCOIN_RPC_PORT}:${BITCOIN_RPC_PORT}"
     volumes:
@@ -77,7 +80,6 @@ services:
       "-listen=1",
       "-bind=172.72.1.30",
       "-proxy=172.72.1.10:${TOR_SOCKS_PORT}",
-      "-addnode=${SEED_NODE}:${ELEMENTS_PORT}",
       "-rpcport=${ELEMENTS_RPC_PORT}",
       "-rpcuser=${ELEMENTS_RPC_USER}",
       "-rpcpassword=${ELEMENTS_RPC_PASSWORD}",
