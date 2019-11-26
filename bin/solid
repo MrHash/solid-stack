@@ -32,6 +32,7 @@ function passthru_command() {
             docker-compose exec -T --user elements $NODE elements-cli \
                 -rpcuser=$ELEMENTS_RPC_USER \
                 -rpcpassword=$ELEMENTS_RPC_PASSWORD \
+                -rpcconnect=$ELEMENTS_HOST \
                 -rpcport=$ELEMENTS_RPC_PORT \
                 $ARGS
             ;;

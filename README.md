@@ -36,6 +36,17 @@ $ docker-compose up -d bitcoin
 # wait for chain sync
 
 $ bin/solid bitcoin getnetworkinfo
+$ bin/solid bitcoin getpeerinfo
+```
+
+## Solid Elements Regtest
+```
+$ docker-compose up -d elements
+
+# wait for chain sync
+
+$ bin/solid elements getnetworkinfo
+$ bin/solid elements getpeerinfo
 ```
 
 ## Destroy the stack
