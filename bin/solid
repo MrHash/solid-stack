@@ -32,7 +32,7 @@ function pegin_command() {
     guardImpl $TARGET "elements"
     #test pegin amount
     local AMOUNT=${args[2]}
-    bin/stack $TARGET generate 1
+    bin/solid $TARGET generate 1
     local ADDRS=$(bin/solid $TARGET getpeginaddress)
     local MAINCHAIN=$(echo $ADDRS | jq '.mainchain_address' | tr -d '"')
     local SIDECHAIN=$(echo $ADDRS | jq '.claim_script' | tr -d '"')
