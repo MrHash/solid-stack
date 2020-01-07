@@ -25,6 +25,14 @@ function guardImpl() {
     fi
 }
 
+function generate_command() {
+    guardImpl $NODE "bitcoin elements"
+    IFS=' ' read -r -a args <<< $ARGS
+    local BLOCKS=${args[1]}
+    local ADDRESS=$(bin/solid $NODE getnewaddress)
+    bin/solid $NODE generatetoaddress $BLOCKS $ADDRESS
+}
+
 function pegin_command() {
     IFS=' ' read -r -a args <<< $ARGS
     local TARGET=${args[1]}
@@ -87,6 +95,8 @@ function passthru_command() {
 }
 
 case "$COMMAND" in
+    generate) generate_command ;;
+
     multisig) multisig_command ;;
 
     getkeypair) getkeypair_command ;;
